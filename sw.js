@@ -1,4 +1,4 @@
-const CACHE_NAME = 'selim-trade-center-v10';
+const CACHE_NAME = 'selim-trade-center-v14';
 const APP_URL = new URL('./index.html', self.registration.scope).href;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -30,7 +30,6 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // App navigation: try the latest page first, then use the cached copy offline.
   if (req.mode === 'navigate' && url.origin === self.location.origin) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
@@ -44,7 +43,6 @@ self.addEventListener('fetch', event => {
     })());
     return;
   }
-  // Cache static same-origin files and Firebase SDK scripts after their first successful load.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(req);
