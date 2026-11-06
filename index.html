@@ -372,8 +372,27 @@ function addNotice(){const text=document.getElementById('noticeText').value.trim
 function deleteNotice(id){if(!confirm('এই নোটিশ মুছে ফেলবেন?'))return;db.notices=(db.notices||[]).filter(n=>n.id!==id);save()}
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function resetShop(){document.getElementById('shopForm').reset();document.getElementById('shopId').value=''}
-function editShop(id){let s=db.shops.find(x=>x.id===id);['id','no','name','tenant','phone','address','rent','status'].forEach(k=>document.getElementById(k==='id'?'shopId':'shop'+k[0].toUpperCase()+k.slice(1)).value=s[k]??'');document.getElementById('shopFloor').value=s.floor||'ফ্লোর নির্ধারণ হয়নি';document.getElementById('shopArea').value=s.area||'';document.getElementById('shopComment').value=s.comment||'';window.scrollTo({top:300,behavior:'smooth'})}
+function editShop(id) {
+  let s = db.shops.find(x => String(x.id) === String(id));
+  if (!s) {
+    alert('দোকানের তথ্য পাওয়া যায়নি।');
+    return;
+  }
 
+  document.getElementById('shopId').value = s.id;
+  document.getElementById('shopFloor').value = s.floor || '';
+  document.getElementById('shopNo').value = s.no || '';
+  document.getElementById('shopName').value = s.name || '';
+  document.getElementById('tenant').value = s.tenant || '';
+  document.getElementById('phone').value = s.phone || '';
+  document.getElementById('address').value = s.address || '';
+  document.getElementById('shopArea').value = s.area || '';
+  document.getElementById('rent').value = s.rent || '';
+  document.getElementById('status').value = s.status || '';
+  document.getElementById('shopComment').value = s.comment || '';
+
+  window.scrollTo({top: 300, behavior: 'smooth'});
+}
 document.getElementById('shopForm').onsubmit = e => {
   e.preventDefault();
 
