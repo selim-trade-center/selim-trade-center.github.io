@@ -1,4 +1,4 @@
-const CACHE_NAME = 'selim-trade-center-v14';
+const CACHE_NAME = 'selim-trade-center-v16';
 const APP_URL = new URL('./index.html', self.registration.scope).href;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
