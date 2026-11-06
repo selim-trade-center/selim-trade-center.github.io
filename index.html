@@ -373,7 +373,46 @@ function deleteNotice(id){if(!confirm('এই নোটিশ মুছে ফ�
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function resetShop(){document.getElementById('shopForm').reset();document.getElementById('shopId').value=''}
 function editShop(id){let s=db.shops.find(x=>x.id===id);['id','no','name','tenant','phone','address','rent','status'].forEach(k=>document.getElementById(k==='id'?'shopId':'shop'+k[0].toUpperCase()+k.slice(1)).value=s[k]??'');document.getElementById('shopFloor').value=s.floor||'ফ্লোর নির্ধারণ হয়নি';document.getElementById('shopArea').value=s.area||'';document.getElementById('shopComment').value=s.comment||'';window.scrollTo({top:300,behavior:'smooth'})}
-document.getElementById('shopForm').onsubmit=e=>{e.preventDefault();if(!signedInUser){alert('আগে লগইন করুন।');return;}let id=Number(shopId.value)||Date.now(),obj={id,floor:shopFloor.value||'ফ্লোর নির্ধারণ হয়নি',no:shopNo.value.trim(),name:shopName.value.trim(),tenant:tenant.value.trim(),phone:phone.value.trim(),address:address.value.trim(),area:Number(shopArea.value||0),rent:Number(rent.value),status:status.value,comment:shopComment.value.trim()};let i=db.shops.findIndex(x=>x.id===id);if(i>=0)db.shops[i]=obj;else db.shops.push(obj);resetShop();save()};
+
+document.getElementById('shopForm').onsubmit = e => {
+  e.preventDefault();
+
+  if (!signedInUser) {
+    alert('আগে লগইন করুন।');
+    return;
+  }
+
+  const val = id => document.getElementById(id).value;
+
+  let id = Number(val('shopId')) || Date.now();
+
+  let obj = {
+    id,
+    floor: val('shopFloor') || 'ফ্লোর নির্ধারণ হয়নি',
+    no: val('shopNo').trim(),
+    name: val('shopName').trim(),
+    tenant: val('tenant').trim(),
+    phone: val('phone').trim(),
+    address: val('address').trim(),
+    area: Number(val('shopArea') || 0),
+    rent: Number(val('rent') || 0),
+    status: val('status'),
+    comment: val('shopComment').trim()
+  };
+
+  let i = db.shops.findIndex(x => x.id === id);
+
+  if (i >= 0) {
+    db.shops[i] = obj;
+  } else {
+    db.shops.push(obj);
+  }
+
+  resetShop();
+  save();
+  alert('দোকানের তথ্য সফলভাবে সেভ হয়েছে।');
+};
+
 document.getElementById('paymentForm').onsubmit=e=>{e.preventDefault();let months=payMonth.value.split(',').map(x=>x.trim()).filter(Boolean);const isDeposit=payDirection.value==='income'&&payType.value==='দোকানের অগ্রিম জামানত';if((!isDeposit&&!months.length)||months.some(m=>!/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(m))){alert('মাস YYYY-MM ফরম্যাটে লিখুন। অগ্রিম জামানতের ক্ষেত্রে মাস ফাঁকা রাখতে পারবেন।');return;}db.payments.push({id:Date.now(),date:payDate.value,shopId:Number(payShop.value),month:payDate.value.slice(0,7),months,direction:payDirection.value,type:payType.value,account:payAccount.value,amount:Number(amount.value),note:note.value.trim()});amount.value='';note.value='';payMonth.value=payDate.value.slice(0,7);save()};
 document.getElementById('contractForm').onsubmit=e=>{e.preventDefault();if(!signedInUser){alert('আগে লগইন করুন।');return;}db.contracts.push({id:Date.now(),shopId:Number(contractShop.value),date:contractDate.value,start:contractStart.value,end:contractEnd.value,rent:Number(contractRent.value),ref:contractRef.value});e.target.reset();save()};
 function del(key,id){if(!signedInUser){alert('আগে লগইন করুন।');return;}if(confirm('এই তথ্যটি মুছে ফেলবেন?')){db[key]=db[key].filter(x=>x.id!==id);save()}}
