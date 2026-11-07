@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stc-v30';
+const CACHE_NAME = 'stc-selim-v32';
 const APP_URL = new URL('./index.html', self.registration.scope).href;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -22,7 +22,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k.startsWith('selim-trade-center-') && k !== CACHE_NAME).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => (k.startsWith('selim-trade-center-') || k.startsWith('stc-')) && k !== CACHE_NAME).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
