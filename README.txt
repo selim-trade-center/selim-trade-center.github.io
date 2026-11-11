@@ -1,8 +1,9 @@
-Selim Trade Center - A4 Portrait PDF Print Update
+Selim Trade Center - Separate Monthly / Annual PDF printing
 
-1. Extract this ZIP file.
-2. Upload the included index.html to the root of your GitHub Pages repository.
-3. Replace the existing index.html and commit the change.
-4. Open the app, generate the Monthly or Annual PDF/Print report, and select A4 / Portrait in the print dialog if the device asks.
+Upload this index.html to the root of your GitHub Pages repository, replacing the existing index.html.
 
-The report print CSS uses A4 Portrait with 4 mm page margins and a full-width report area. Long reports may continue onto additional A4 pages rather than clipping rows.
+In the Reports page:
+- Use the Monthly Print / PDF button to print only the monthly statement.
+- Use the Annual Print / PDF button to print only the annual statement.
+
+Both use A4 Portrait print settings. A long report can continue onto additional pages.
