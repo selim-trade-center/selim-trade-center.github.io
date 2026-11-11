@@ -1,10 +1,8 @@
-SELIM TRADE CENTER - FINAL HTML PACKAGE
+Selim Trade Center - A4 Portrait PDF Print Update
 
-GitHub Pages:
-1. Keep a backup of the existing index.html.
-2. Upload this index.html to the repository root and replace the old index.html.
-3. Wait for GitHub Pages deployment, then reload the site in Chrome.
-4. Sign in and test Monthly Excel and Annual Excel.
+1. Extract this ZIP file.
+2. Upload the included index.html to the root of your GitHub Pages repository.
+3. Replace the existing index.html and commit the change.
+4. Open the app, generate the Monthly or Annual PDF/Print report, and select A4 / Portrait in the print dialog if the device asks.
 
-The Excel financial export is generated from the app's current saved records.
-It creates a workbook with the print-instructions, monthly statement, and annual statement sheets.
+The report print CSS uses A4 Portrait with 4 mm page margins and a full-width report area. Long reports may continue onto additional A4 pages rather than clipping rows.
