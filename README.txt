@@ -1,9 +1,1 @@
-Selim Trade Center - Separate Monthly / Annual PDF printing
-
-Upload this index.html to the root of your GitHub Pages repository, replacing the existing index.html.
-
-In the Reports page:
-- Use the Monthly Print / PDF button to print only the monthly statement.
-- Use the Annual Print / PDF button to print only the annual statement.
-
-Both use A4 Portrait print settings. A long report can continue onto additional pages.
+Selim Trade Center updated HTML. Upload index.html to GitHub Pages. Excel export: A4 Landscape, fit to one page wide with automatic additional pages vertically, repeated report heading rows, defined print area, and expanded signature row height. PDF print styles were not modified in this update.
