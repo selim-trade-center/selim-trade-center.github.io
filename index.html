@@ -338,7 +338,7 @@ footer{margin-left:232px}
 
 <section id="users" class="panel">
   <h2>ইউজার ম্যানেজমেন্ট</h2>
-  <div class="notice">শুধু Admin নতুন কর্মী অ্যাকাউন্ট তৈরি, পদবি পরিবর্তন এবং অ্যাকাউন্ট সক্রিয়/নিষ্ক্রিয় করতে পারবেন। Accountant ও Co-Manager-এর সফটওয়্যার ব্যবহারের অনুমতি একই; Manager-এর বিদ্যমান অনুমতি অপরিবর্তিত। কর্মীরা ইমেইলের বদলে ইউজারনেম দিয়ে লগইন করবেন। Firebase Authentication-এর পেছনে স্বয়ংক্রিয় অভ্যন্তরীণ ইমেইল ব্যবহার হবে; কর্মীদের ব্যক্তিগত Gmail প্রয়োজন নেই।</div>
+  <div class="notice">শুধু Admin নতুন কর্মী অ্যাকাউন্ট তৈরি, পদবি পরিবর্তন এবং অ্যাকাউন্ট সক্রিয়/নিষ্ক্রিয় করতে পারবেন। Admin ছাড়া সব অনুমোদিত ইউজার ব্যবসায়িক তথ্য যোগ ও সম্পাদনা করতে পারবেন; তথ্য মুছে ফেলা ও ব্যাকআপ রিস্টোর শুধু Admin করতে পারবেন। কর্মীরা ইমেইলের বদলে ইউজারনেম দিয়ে লগইন করবেন। Firebase Authentication-এর পেছনে স্বয়ংক্রিয় অভ্যন্তরীণ ইমেইল ব্যবহার হবে; কর্মীদের ব্যক্তিগত Gmail প্রয়োজন নেই।</div>
   <div class="box"><h3>নতুন ইউজার তৈরি</h3><form id="createUserForm" class="grid">
     <div><label>ইউজারনেম</label><input id="newUsername" required placeholder="যেমন: ইউজার ০০১"></div>
     <div><label>পদবি</label><select id="newUserRole"><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="co-manager">Co-Manager</option></select></div>
@@ -519,7 +519,7 @@ function load(){try{db=JSON.parse(localStorage.getItem(KEY))||null}catch(e){db=n
 let cloudReady=false, applyingCloud=false, cloudUnsubs=[], cloudBase={shops:{},payments:{},contracts:{},notices:{},settings:null};
 const cloudCollections=['shops','payments','contracts','notices'];
 function byIdMap(rows){const m={};(rows||[]).forEach(x=>m[String(x.id)]=JSON.stringify(x));return m}
-async function cloudSave(){if(!cloudReady||applyingCloud||!signedInUser)return;try{const batch=fbDb.batch();let count=0;for(const key of cloudCollections){const col=fbDb.collection(key),now=byIdMap(db[key]),before=cloudBase[key]||{};for(const id of Object.keys(now)){if(now[id]!==before[id]){const item=(db[key]||[]).find(x=>String(x.id)===id);batch.set(col.doc(id),item);count++}}for(const id of Object.keys(before)){if(!(id in now)){batch.delete(col.doc(id));count++}}cloudBase[key]=now;}const ob=JSON.stringify(db.openingBalances||{cash:0,bank:0});if(ob!==cloudBase.settings){batch.set(fbDb.collection('settings').doc('main'),{openingBalances:db.openingBalances||{cash:0,bank:0}});cloudBase.settings=ob;count++}if(count)await batch.commit();localStorage.removeItem('stc_cloud_pending');}catch(e){console.error('Cloud save failed',e);if(!navigator.onLine){localStorage.setItem('stc_cloud_pending','1');return;}alert('ক্লাউডে সিঙ্ক করা যায়নি। ইন্টারনেট ও Firestore Rules পরীক্ষা করুন।')}}
+async function cloudSave(){if(!cloudReady||applyingCloud||!signedInUser)return;try{if(signedInUser.role!=='admin'){for(const key of cloudCollections){const before=cloudBase[key]||{},now=byIdMap(db[key]);for(const id of Object.keys(before)){if(!(id in now)){const old=JSON.parse(before[id]);if(!db[key].some(x=>String(x.id)===id))db[key].push(old);}}}}const batch=fbDb.batch();let count=0;for(const key of cloudCollections){const col=fbDb.collection(key),now=byIdMap(db[key]),before=cloudBase[key]||{};for(const id of Object.keys(now)){if(now[id]!==before[id]){const item=(db[key]||[]).find(x=>String(x.id)===id);batch.set(col.doc(id),item);count++}}for(const id of Object.keys(before)){if(!(id in now)){batch.delete(col.doc(id));count++}}cloudBase[key]=now;}const ob=JSON.stringify(db.openingBalances||{cash:0,bank:0});if(ob!==cloudBase.settings){batch.set(fbDb.collection('settings').doc('main'),{openingBalances:db.openingBalances||{cash:0,bank:0}});cloudBase.settings=ob;count++}if(count)await batch.commit();localStorage.removeItem('stc_cloud_pending');}catch(e){console.error('Cloud save failed',e);if(!navigator.onLine){localStorage.setItem('stc_cloud_pending','1');return;}alert('ক্লাউডে সিঙ্ক করা যায়নি। ইন্টারনেট ও Firestore Rules পরীক্ষা করুন।')}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render();cloudSave()}
 async function startCloudSync(){const localCopy=JSON.parse(JSON.stringify(db));cloudUnsubs.forEach(f=>f());cloudUnsubs=[];cloudReady=false;applyingCloud=true;const ready={shops:false,payments:false,contracts:false,notices:false,settings:false};let finished=false;const finish=async()=>{if(finished||!Object.values(ready).every(Boolean))return;finished=true;const empty=cloudCollections.every(k=>(db[k]||[]).length===0)&&!cloudBase.settings;if(empty){for(const k of cloudCollections)db[k]=localCopy[k]||[];db.openingBalances=localCopy.openingBalances||{cash:0,bank:0};for(const k of cloudCollections)cloudBase[k]={};cloudBase.settings=null;cloudReady=true;await cloudSave()}else{cloudReady=true;localStorage.setItem(KEY,JSON.stringify(db))}applyingCloud=false;render();};for(const key of cloudCollections){const unsub=fbDb.collection(key).onSnapshot(snap=>{db[key]=snap.docs.map(d=>({...d.data(),id:d.data().id??(Number(d.id)||d.id)}));cloudBase[key]=byIdMap(db[key]);ready[key]=true;localStorage.setItem(KEY,JSON.stringify(db));render();finish()},err=>{console.error(err);alert('Firestore থেকে '+key+' তথ্য পড়া যায়নি। Security Rules পরীক্ষা করুন।')});cloudUnsubs.push(unsub)}cloudUnsubs.push(fbDb.collection('settings').doc('main').onSnapshot(doc=>{if(doc.exists){db.openingBalances=doc.data().openingBalances||{cash:0,bank:0};cloudBase.settings=JSON.stringify(db.openingBalances)}ready.settings=true;finish();render()},err=>console.error(err)));}
 
@@ -652,7 +652,7 @@ function renderBackupStatus(){
   el.innerHTML='সর্বশেষ ডাউনলোড ব্যাকআপ: <b>'+(local?esc(fmtDateTime(local)):'এখনো হয়নি')+'</b><br>সর্বশেষ Google Drive ব্যাকআপ: <b>'+(drive?esc(fmtDateTime(drive)):'এখনো হয়নি')+'</b>';
 }
 function addNotice(){const text=document.getElementById('noticeText').value.trim();if(!text){alert('নোটিশ লিখুন।');return;}db.notices=db.notices||[];db.notices.push({id:Date.now(),text,date:todayISO()});document.getElementById('noticeText').value='';save()}
-function deleteNotice(id){if(!confirm('এই নোটিশ মুছে ফেলবেন?'))return;db.notices=(db.notices||[]).filter(n=>n.id!==id);save()}
+function deleteNotice(id){if(signedInUser?.role!=='admin'){alert('শুধু Admin তথ্য মুছতে পারবেন।');return;}if(!confirm('এই নোটিশ মুছে ফেলবেন?'))return;db.notices=(db.notices||[]).filter(n=>n.id!==id);save()}
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function resetShop(){
   document.getElementById('shopForm').reset();
@@ -749,7 +749,7 @@ function renderChequeReminders(){
 }
 function enableChequeNotifications(){if(!('Notification' in window)){alert('এই ব্রাউজারে নোটিফিকেশন সমর্থিত নয়।');return;}Notification.requestPermission().then(p=>{if(p==='granted'){localStorage.removeItem('stc_cheque_notice_day');renderChequeReminders();alert('ফোন/ব্রাউজার নোটিফিকেশন অনুমতি চালু হয়েছে।');}else alert('নোটিফিকেশন অনুমতি দেওয়া হয়নি। অ্যাপের ভেতরে সতর্কতা দেখা যাবে।');});}
 if(!window.stcChequeReminderTimer){window.stcChequeReminderTimer=setInterval(()=>{if(document.visibilityState==='visible'&&typeof db!=='undefined'&&db)renderChequeReminders();},60000);}
-function del(key,id){if(!signedInUser){alert('আগে লগইন করুন।');return;}if(confirm('এই তথ্যটি মুছে ফেলবেন?')){db[key]=db[key].filter(x=>x.id!==id);save()}}
+function del(key,id){if(!signedInUser){alert('আগে লগইন করুন।');return;}if(signedInUser.role!=='admin'){alert('শুধু Admin তথ্য মুছতে পারবেন। আপনি তথ্য যোগ ও সম্পাদনা করতে পারবেন।');return;}if(confirm('এই তথ্যটি মুছে ফেলবেন?')){db[key]=db[key].filter(x=>x.id!==id);save()}}
 document.getElementById('shopSearch').addEventListener('input',render);document.getElementById('shopFloorFilter').addEventListener('change',render);
 document.getElementById('payDate').value=todayISO();document.getElementById('payMonth').value=currentMonthISO();document.getElementById('reportMonth').value=currentMonthISO();document.getElementById('reportYear').value=new Date().getFullYear();document.getElementById('rentReportMonth').value=currentMonthISO();
 function rentMonthData(shop, selectedMonth){
@@ -993,6 +993,7 @@ async function backupToDrive(){
   }catch(err){console.error(err);alert('Google Drive-এ ব্যাকআপ রাখা যায়নি। Drive সংযোগের মেয়াদ শেষ হলে আবার সংযোগ করুন।');}
 }
 async function restoreBackupFile(file){
+  if(signedInUser?.role!=='admin'){alert('শুধু Admin ব্যাকআপ রিস্টোর করতে পারবেন, কারণ এতে পুরোনো তথ্য প্রতিস্থাপিত হতে পারে।');return;}
   const raw=await file.text();const x=JSON.parse(raw);
   if(!Array.isArray(x.shops)||!Array.isArray(x.payments)||!Array.isArray(x.contracts))throw Error('Invalid backup');
   if(!confirm('ব্যাকআপের তথ্য দিয়ে বর্তমান দোকান, হিসাব, চুক্তি ও ডকুমেন্ট প্রতিস্থাপন করবেন? আগে বর্তমান তথ্যের ব্যাকআপ নিন।'))return;
@@ -1005,7 +1006,7 @@ async function restoreBackupFile(file){
   save();await renderDocuments();alert('ব্যাকআপ রিস্টোর সম্পন্ন হয়েছে।');
 }
 document.getElementById('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await restoreBackupFile(f)}catch(err){console.error(err);alert('ফাইলটি সঠিক ব্যাকআপ নয় অথবা রিস্টোর করা যায়নি।')}finally{e.target.value=''}};
-function clearAll(){if(confirm('সত্যিই সব তথ্য মুছবেন? আগে ব্যাকআপ নিন।')){db={shops:[],payments:[],contracts:[],notices:[]};save()}}
+function clearAll(){if(signedInUser?.role!=='admin'){alert('শুধু Admin সব তথ্য মুছতে পারবেন।');return;}if(confirm('সত্যিই সব তথ্য মুছবেন? আগে ব্যাকআপ নিন।')){db={shops:[],payments:[],contracts:[],notices:[]};save()}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');if(b.dataset.tab==='documents')renderDocuments();if(b.dataset.tab==='rentReport')renderRentCollectionReport()});
 
 // Firebase Authentication and role-based access.
@@ -1014,9 +1015,9 @@ function roleLabel(r){return r==='admin'?'Admin':r==='manager'?'Manager':r==='ac
 function applyRole(){
   const role=signedInUser?.role;
   document.querySelector('button[onclick="clearAll()"]')?.style.setProperty('display',role==='admin'?'':'none');
-  document.getElementById('signedInLabel').textContent=(signedInUser?.name||signedInUser?.email||'')+' · '+roleLabel(role);
+  document.getElementById('signedInLabel').textContent=(signedInUser?.name||signedInUser?.email||'')+(role==='admin'?' · Admin':'');
   document.getElementById('usersNav').style.display=role==='admin'?'':'none';
-  const allowed=role==='admin'?['home','shops','payments','contracts','documents','reports','backup','users','account']:role==='manager'?['home','shops','payments','contracts','documents','reports','backup','account']:['home','payments','documents','reports','account'];
+  const allowed=role==='admin'?['home','shops','payments','contracts','documents','reports','backup','users','account']:['home','shops','payments','contracts','documents','reports','backup','account'];
   document.querySelectorAll('nav button').forEach(b=>{b.style.display=allowed.includes(b.dataset.tab)?'':'none'});
   document.querySelectorAll('.panel').forEach(s=>{if(!allowed.includes(s.id))s.classList.remove('active')});
   if(!allowed.includes(document.querySelector('.panel.active')?.id)){document.querySelectorAll('.panel').forEach(s=>s.classList.remove('active'));document.getElementById('home').classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab==='home'))}
@@ -1289,7 +1290,7 @@ async function saveDocument(e){
 async function getDoc(id){const docs=await getAllDocs();return docs.find(x=>x.id===id)}
 async function openDocument(id){const x=await getDoc(id);if(!x)return;const url=URL.createObjectURL(x.blob);const w=window.open(url,'_blank');if(!w){alert('পপ-আপ ব্লক হয়েছে। ডাউনলোড বাটন ব্যবহার করুন।')}setTimeout(()=>URL.revokeObjectURL(url),60000)}
 async function downloadDocument(id){const x=await getDoc(id);if(!x)return;const url=URL.createObjectURL(x.blob),a=document.createElement('a');a.href=url;a.download=x.fileName;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
-async function deleteDocument(id){if(!signedInUser||!confirm('এই ডকুমেন্টটি মুছে ফেলবেন?'))return;await removeDoc(id);renderDocuments()}
+async function deleteDocument(id){if(!signedInUser){alert('আগে লগইন করুন।');return;}if(signedInUser.role!=='admin'){alert('শুধু Admin ডকুমেন্ট মুছতে পারবেন।');return;}if(!confirm('এই ডকুমেন্টটি মুছে ফেলবেন?'))return;await removeDoc(id);renderDocuments()}
 document.getElementById('documentForm').addEventListener('submit',saveDocument);
 document.getElementById('docSearch').addEventListener('input',renderDocuments);
 document.getElementById('docFilter').addEventListener('change',renderDocuments);
